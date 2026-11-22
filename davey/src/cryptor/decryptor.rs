@@ -197,11 +197,9 @@ impl Decryptor {
       warn!("decryption failed, ciphertext mismatch (internal error!)");
       return Err(DecryptorDecryptError::DecryptionFailure);
     }
-    encrypted_frame
-      .plaintext
-      .copy_from_slice(&encrypted_frame.ciphertext);
 
     let result = cipher.as_mut().unwrap().decrypt(
+      &encrypted_frame.ciphertext,
       &mut encrypted_frame.plaintext,
       &nonce_buffer,
       &encrypted_frame.authenticated,

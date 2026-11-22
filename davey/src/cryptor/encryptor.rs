@@ -194,11 +194,9 @@ impl Encryptor {
         warn!("encryption failed, plaintext mismatch (internal error!)");
         return Err(EncryptorEncryptError::EncryptionFailure);
       }
-      frame_processor
-        .ciphertext_bytes
-        .copy_from_slice(plaintext_buffer);
 
       let encrypt_result = curr_cryptor.encrypt(
+        plaintext_buffer,
         frame_processor.ciphertext_bytes.as_mut_slice(),
         &nonce_buffer,
         additional_data,

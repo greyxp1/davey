@@ -177,7 +177,6 @@ impl InboundFrameProcessor {
     self.unencrypted_ranges.clear();
     self.authenticated.clear();
     self.ciphertext.clear();
-    self.plaintext.clear();
     self.tag.clear();
   }
 
@@ -331,7 +330,6 @@ impl OutboundFrameProcessor {
     self.frame_index = 0;
     self.unencrypted_bytes.clear();
     self.encrypted_bytes.clear();
-    self.ciphertext_bytes.clear();
     self.unencrypted_ranges.clear();
   }
 

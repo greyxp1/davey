@@ -16,16 +16,18 @@ fn encrypt_decrypt() {
 
   let mut cipher = AeadCipher::new(&make_static_sender_key("12345678901234567890")).unwrap();
 
-  let mut buffer = plaintext.clone();
+  let mut buffer = vec![0; PLAINTEXT_SIZE];
   let tag = cipher
-    .encrypt(&mut buffer, &nonce, &additional_data)
+    .encrypt(&plaintext, &mut buffer, &nonce, &additional_data)
     .expect("encryption should succeed");
 
   // The ciphertext should not be the same as the plaintext
   assert_ne!(buffer, plaintext);
 
+  let ciphertext = buffer;
+  let mut buffer = vec![0; PLAINTEXT_SIZE];
   cipher
-    .decrypt(&mut buffer, &nonce, &additional_data, &tag)
+    .decrypt(&ciphertext, &mut buffer, &nonce, &additional_data, &tag)
     .expect("decryption should succeed");
 
   // The plaintext should be the same as the original plaintext
@@ -40,17 +42,20 @@ fn additional_data_auth() {
 
   let mut cipher = AeadCipher::new(&make_static_sender_key("12345678901234567890")).unwrap();
 
+  let plaintext = [0; PLAINTEXT_SIZE];
   let mut buffer = vec![0u8; PLAINTEXT_SIZE];
   let tag = cipher
-    .encrypt(&mut buffer, &nonce, &additional_data)
+    .encrypt(&plaintext, &mut buffer, &nonce, &additional_data)
     .expect("encryption should succeed");
 
   // We modify the additional data before decryption
   additional_data[0] = 1;
 
+  let ciphertext = buffer;
+  let mut buffer = vec![0; PLAINTEXT_SIZE];
   assert!(
     cipher
-      .decrypt(&mut buffer, &nonce, &additional_data, &tag)
+      .decrypt(&ciphertext, &mut buffer, &nonce, &additional_data, &tag)
       .is_err()
   );
 }
@@ -64,16 +69,17 @@ fn key_diff() {
   let mut cipher1 = AeadCipher::new(&make_static_sender_key("12345678901234567890")).unwrap();
   let mut cipher2 = AeadCipher::new(&make_static_sender_key("09876543210987654321")).unwrap();
 
+  let plaintext = [0; PLAINTEXT_SIZE];
   let mut ciphertext1 = vec![0u8; PLAINTEXT_SIZE];
   let mut ciphertext2 = vec![0u8; PLAINTEXT_SIZE];
   assert!(
     cipher1
-      .encrypt(&mut ciphertext1, &nonce, &additional_data)
+      .encrypt(&plaintext, &mut ciphertext1, &nonce, &additional_data)
       .is_ok()
   );
   assert!(
     cipher2
-      .encrypt(&mut ciphertext2, &nonce, &additional_data)
+      .encrypt(&plaintext, &mut ciphertext2, &nonce, &additional_data)
       .is_ok()
   );
 
@@ -89,16 +95,17 @@ fn nonce_diff() {
 
   let mut cipher = AeadCipher::new(&make_static_sender_key("12345678901234567890")).unwrap();
 
+  let plaintext = [0; PLAINTEXT_SIZE];
   let mut ciphertext1 = vec![0u8; PLAINTEXT_SIZE];
   let mut ciphertext2 = vec![0u8; PLAINTEXT_SIZE];
   assert!(
     cipher
-      .encrypt(&mut ciphertext1, &nonce1, &additional_data)
+      .encrypt(&plaintext, &mut ciphertext1, &nonce1, &additional_data)
       .is_ok()
   );
   assert!(
     cipher
-      .encrypt(&mut ciphertext2, &nonce2, &additional_data)
+      .encrypt(&plaintext, &mut ciphertext2, &nonce2, &additional_data)
       .is_ok()
   );
 

@@ -33,27 +33,29 @@ impl AeadCipher {
 
   pub fn encrypt(
     &mut self,
+    input: &[u8],
     buffer: &mut [u8],
     nonce: &[u8],
     aad: &[u8],
   ) -> Result<[u8; AES_GCM_127_TRUNCATED_TAG_BYTES]> {
     let mut tag = [0; AES_GCM_127_TRUNCATED_TAG_BYTES];
     let mut tag_len = 0;
-    let len = buffer.len();
-    let data = buffer.as_mut_ptr();
-    // SAFETY: AWS-LC supports exact input/output aliasing. All buffers are valid
-    // for their supplied lengths, with no extra plaintext input.
+    if input.len() != buffer.len() {
+      return Err(Error);
+    }
+    // SAFETY: input and output have equal lengths and the Rust slices do not alias.
+    // The tag has its own buffer, and there is no extra plaintext input.
     let sealed = unsafe {
       EVP_AEAD_CTX_seal_scatter(
         self.0.as_ptr(),
-        data,
+        buffer.as_mut_ptr(),
         tag.as_mut_ptr(),
         &mut tag_len,
         tag.len(),
         nonce.as_ptr(),
         nonce.len(),
-        data,
-        len,
+        input.as_ptr(),
+        input.len(),
         ptr::null(),
         0,
         aad.as_ptr(),
@@ -67,19 +69,27 @@ impl AeadCipher {
     }
   }
 
-  pub fn decrypt(&mut self, buffer: &mut [u8], nonce: &[u8], aad: &[u8], tag: &[u8]) -> Result<()> {
-    let len = buffer.len();
-    let data = buffer.as_mut_ptr();
-    // SAFETY: AWS-LC supports exact input/output aliasing and writes at most
-    // the ciphertext length. The detached tag, nonce, and AAD are read-only.
+  pub fn decrypt(
+    &mut self,
+    input: &[u8],
+    buffer: &mut [u8],
+    nonce: &[u8],
+    aad: &[u8],
+    tag: &[u8],
+  ) -> Result<()> {
+    if input.len() != buffer.len() {
+      return Err(Error);
+    }
+    // SAFETY: AWS-LC writes at most the ciphertext length. The input and output
+    // slices do not alias. The detached tag, nonce, and AAD are read-only.
     let opened = unsafe {
       EVP_AEAD_CTX_open_gather(
         self.0.as_ptr(),
-        data,
+        buffer.as_mut_ptr(),
         nonce.as_ptr(),
         nonce.len(),
-        data,
-        len,
+        input.as_ptr(),
+        input.len(),
         tag.as_ptr(),
         tag.len(),
         aad.as_ptr(),

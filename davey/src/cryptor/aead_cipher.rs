@@ -19,10 +19,15 @@ impl AeadCipher {
 
   pub fn encrypt(
     &mut self,
+    input: &[u8],
     buffer: &mut [u8],
     nonce: &[u8],
     aad: &[u8],
   ) -> crate::aes_gcm::aead::Result<[u8; 8]> {
+    if input.len() != buffer.len() {
+      return Err(crate::aes_gcm::aead::Error);
+    }
+    buffer.copy_from_slice(input);
     self
       .key
       .encrypt_in_place_detached(nonce.into(), aad, buffer)
@@ -31,11 +36,16 @@ impl AeadCipher {
 
   pub fn decrypt(
     &mut self,
+    input: &[u8],
     buffer: &mut [u8],
     nonce: &[u8],
     aad: &[u8],
     tag: &[u8],
   ) -> crate::aes_gcm::aead::Result<()> {
+    if input.len() != buffer.len() {
+      return Err(crate::aes_gcm::aead::Error);
+    }
+    buffer.copy_from_slice(input);
     self
       .key
       .decrypt_in_place_detached(nonce.into(), aad, buffer, tag.into())
