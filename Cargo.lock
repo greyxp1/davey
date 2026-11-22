@@ -309,6 +309,7 @@ dependencies = [
  "ctr",
  "ghash",
  "hmac",
+ "memchr",
  "napi",
  "napi-derive",
  "num-derive",
